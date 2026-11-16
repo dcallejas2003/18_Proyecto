@@ -1,0 +1,60 @@
+package com.sistema.estudiante._8_proyectoprogramacion;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+
+class EstudianteValidacionTest {
+
+    private final Validator validador = Validation.buildDefaultValidatorFactory().getValidator();
+
+    private Estudiante estudianteValido() {
+        Estudiante e = new Estudiante();
+        e.setNombre("Ana");
+        e.setApellido("López");
+        e.setCorreo("ana@mail.com");
+        e.setTelefono("55512345");
+        e.setIdioma("inglés");
+        return e;
+    }
+
+    @Test
+    void estudianteValido_noTieneErrores() {
+        assertTrue(validador.validate(estudianteValido()).isEmpty());
+    }
+
+    @Test
+    void nombreVacio_esInvalido() {
+        Estudiante e = estudianteValido();
+        e.setNombre("");
+
+        assertFalse(validador.validate(e).isEmpty());
+    }
+
+    @Test
+    void correoSinFormato_esInvalido() {
+        Estudiante e = estudianteValido();
+        e.setCorreo("esto-no-es-correo");
+
+        assertFalse(validador.validate(e).isEmpty());
+    }
+
+    @Test
+    void telefonoCorto_esInvalido() {
+        Estudiante e = estudianteValido();
+        e.setTelefono("123");
+
+        assertFalse(validador.validate(e).isEmpty());
+    }
+
+    @Test
+    void idiomaNoPermitido_esInvalido() {
+        Estudiante e = estudianteValido();
+        e.setIdioma("alemán");
+
+        assertFalse(validador.validate(e).isEmpty());
+    }
+}
