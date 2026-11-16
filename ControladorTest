@@ -1,0 +1,96 @@
+package com.sistema.estudiante._8_proyectoprogramacion;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+
+class ControladorTest {
+
+    private Controlador controlador;
+
+    @BeforeEach
+    void preparar() {
+        controlador = new Controlador();
+    }
+
+    private Estudiante crearEstudiante(String correo) {
+        Estudiante e = new Estudiante();
+        e.setNombre("Ana");
+        e.setApellido("López");
+        e.setCorreo(correo);
+        e.setTelefono("55512345");
+        e.setIdioma("inglés");
+        return e;
+    }
+
+    @Test
+    void agregarEstudianteValido_devuelve201() {
+        var respuesta = controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+
+        assertEquals(HttpStatus.CREATED, respuesta.getStatusCode());
+        assertEquals(1, controlador.obtenerTodos().size());
+    }
+
+    @Test
+    void agregarCorreoRepetido_devuelve409() {
+        controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+
+        var respuesta = controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+
+        assertEquals(HttpStatus.CONFLICT, respuesta.getStatusCode());
+    }
+
+    @Test
+    void buscarIdExistente_devuelve200() {
+        controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+
+        assertEquals(HttpStatus.OK, controlador.obtenerPorId(1L).getStatusCode());
+    }
+
+    @Test
+    void buscarIdInexistente_devuelve404() {
+        assertEquals(HttpStatus.NOT_FOUND, controlador.obtenerPorId(99L).getStatusCode());
+    }
+
+    @Test
+    void actualizarEstudiante_cambiaLosDatos() {
+        controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+        Estudiante nuevos = crearEstudiante("ana@mail.com");
+        nuevos.setNombre("Ana María");
+
+        var respuesta = controlador.actualizarEstudiante(1L, nuevos);
+
+        assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+        assertEquals("Ana María", controlador.obtenerPorId(1L).getBody().getNombre());
+    }
+
+    @Test
+    void patchSoloTelefono_conservaElResto() {
+        controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+        Estudiante parcial = new Estudiante();
+        parcial.setTelefono("99999999");
+
+        controlador.editarParcial(1L, parcial);
+
+        Estudiante resultado = controlador.obtenerPorId(1L).getBody();
+        assertEquals("99999999", resultado.getTelefono());
+        assertEquals("Ana", resultado.getNombre());
+    }
+
+    @Test
+    void eliminarEstudiante_loQuitaDeLaLista() {
+        controlador.agregarEstudiante(crearEstudiante("ana@mail.com"));
+
+        var respuesta = controlador.eliminarEstudiante(1L);
+
+        assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+        assertTrue(controlador.obtenerTodos().isEmpty());
+    }
+
+    @Test
+    void eliminarIdInexistente_devuelve404() {
+        assertEquals(HttpStatus.NOT_FOUND, controlador.eliminarEstudiante(99L).getStatusCode());
+    }
+}
